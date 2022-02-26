@@ -66,10 +66,37 @@ class ChatUser {
    * 
   */
 
-  handleJoke() {
+   handleJoke() {
     const joke = "The best time on a clock is 6:30--hands down.";
-    // const data = { type: }
-    this._send(joke);
+    const data = { type: "chat", text: joke, name: "Server"}
+    this.send(JSON.stringify(data));
+  }
+
+  /** Members, returns a list of current chatroom users
+   * only visible by the requesting user.
+   * 
+   */
+
+  handleMembers() {
+    const members = [...this.room.members].map(user => user.name);
+    console.log("members: ", members);
+    const msg = `In this room: ${members.join(", ")}`;
+    const data = { type: "chat", text: msg, name: "Server"}
+    this.send(JSON.stringify(data));
+  }
+
+  /** handleCommands container function to idenitify and call
+   * special commands submitted by users.
+   */
+  
+  handleCommand(msg) {
+    const msgText = msg.text;
+
+    if (msgText === "/joke") { this.handleJoke(); }
+    if (msgText=== "/members") {this.handleMembers();}
+    // if (msgText)
+    // if (msgText)
+
   }
 
 
@@ -88,7 +115,12 @@ class ChatUser {
 
     if (msg.type === "join") this.handleJoin(msg.name);
     else if (msg.type === "chat") {
-      this.handleChat(msg.text);
+      if (msg.text.startsWith("/")) {
+        this.handleCommand(msg);
+      } else{
+        this.handleChat(msg.text);
+      }
+      
     }
     else throw new Error(`bad message: ${msg.type}`);
   }
