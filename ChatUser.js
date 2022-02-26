@@ -66,11 +66,14 @@ class ChatUser {
    * 
   */
 
-   handleJoke() {
+  handleJoke() {
     const joke = "The best time on a clock is 6:30--hands down.";
-    const data = { type: "chat", text: joke, name: "Server"}
+    const data = { type: "chat", text: joke, name: "Server" }
     this.send(JSON.stringify(data));
   }
+
+  // TODO: move the command (msgs that start with /) to the Room class, rename 
+  // to send[Command].
 
   /** Members, returns a list of current chatroom users
    * only visible by the requesting user.
@@ -81,20 +84,44 @@ class ChatUser {
     const members = [...this.room.members].map(user => user.name);
     console.log("members: ", members);
     const msg = `In this room: ${members.join(", ")}`;
-    const data = { type: "chat", text: msg, name: "Server"}
+    const data = { type: "chat", text: msg, name: "Server" }
     this.send(JSON.stringify(data));
+  }
+
+  /** Handles private messaging another user. The message is only visible to 
+   * the sender and the receiver.
+   * 
+   */
+
+  handlePrivMsg(msgText) {
+    const textParts = msgText.split(" ");
+    const receiverName = textParts[1];
+    const members = [...this.room.members];
+    const receiver = members.find(user => user.name === receiverName);
+    if (receiver === undefined) {
+      this.send(JSON.stringify({
+        type: "chat",
+        text: `User ${receiverName} not found!`,
+        name: "Server"
+      }));
+    }
+    const toBeSent = textParts.slice(2).join(" ");
+    const data = { type: "priv", text: toBeSent, name: this.name };
+
+    this.send(JSON.stringify(data));
+    receiver.send(JSON.stringify(data));
   }
 
   /** handleCommands container function to idenitify and call
    * special commands submitted by users.
    */
-  
+
   handleCommand(msg) {
     const msgText = msg.text;
 
-    if (msgText === "/joke") { this.handleJoke(); }
-    if (msgText=== "/members") {this.handleMembers();}
-    // if (msgText)
+    if (msgText === "/joke") this.handleJoke();
+    if (msgText === "/members") this.handleMembers();
+    if (msgText.split(" ")[0] === "/priv") this.handlePrivMsg(msgText);
     // if (msgText)
 
   }
@@ -117,10 +144,10 @@ class ChatUser {
     else if (msg.type === "chat") {
       if (msg.text.startsWith("/")) {
         this.handleCommand(msg);
-      } else{
+      } else {
         this.handleChat(msg.text);
       }
-      
+
     }
     else throw new Error(`bad message: ${msg.type}`);
   }
