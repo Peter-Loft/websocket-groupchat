@@ -62,6 +62,17 @@ class ChatUser {
     });
   }
 
+  /** Handle a joke: send a joke just to message sender. 
+   * 
+  */
+
+  handleJoke() {
+    const joke = "The best time on a clock is 6:30--hands down.";
+    // const data = { type: }
+    this._send(joke);
+  }
+
+
   /** Handle messages from client:
    *
    * @param jsonData {string} raw message data
@@ -76,7 +87,9 @@ class ChatUser {
     let msg = JSON.parse(jsonData);
 
     if (msg.type === "join") this.handleJoin(msg.name);
-    else if (msg.type === "chat") this.handleChat(msg.text);
+    else if (msg.type === "chat") {
+      this.handleChat(msg.text);
+    }
     else throw new Error(`bad message: ${msg.type}`);
   }
 
